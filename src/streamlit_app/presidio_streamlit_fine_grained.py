@@ -64,6 +64,7 @@ class SpacyRecognizerCustom(LocalRecognizer):
         ({"iNSTITUTION"}, {"ia", "ic", "if", "io", "i_"}),
         ({"PHONE_NUM"}, {"at"}),
         ({"MEDIA_NAME"}, {"mn", "ms"}),
+        ({"NUMBER_EXPR"}, {"nb", "nc", "ni", "no", "ns", "n_"}),
         ({"DOMAIN"}, {"mi"}),
         ({"LOCATION"}, {"ah", "az", "gc", "gh", "gl", "gq", "gr", "gs", "gt", "gu", "g_"}),
         ({"PRODUCT"}, {"op"}),
