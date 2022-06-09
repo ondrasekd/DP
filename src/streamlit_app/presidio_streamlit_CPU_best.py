@@ -8,7 +8,7 @@ import spacy
 
 # TODO pohrat si s dalsim stremlit komponentami
 
-nlp = spacy.load('/content/drive/MyDrive/PIIAnonymizer/models/CPU_fine_lemmas/model-best')
+nlp = spacy.load('/content/drive/MyDrive/PIIAnonymizer/models/CPU_nomorph/model-best')
 
 import logging
 from typing import Optional, List, Tuple, Set
@@ -203,7 +203,7 @@ from presidio_analyzer.nlp_engine import NlpEngineProvider
 # Create configuration containing engine name and models
 configuration = {
     "nlp_engine_name": "spacy",
-    "models": [{"lang_code": "cs", "model_name": "cs_TrivialCPUFineGrained"}],
+    "models": [{"lang_code": "cs", "model_name": "cs_CPU_fine_nomorph"}],
 }
 
 # Create new recognizer registry and add the custom recognizer
