@@ -1,4 +1,3 @@
-"""Streamlit app for Presidio."""
 import json
 from json import JSONEncoder
 import pandas as pd
@@ -7,7 +6,7 @@ from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
 import spacy
 
-nlp = spacy.load('/content/drive/MyDrive/DP/models/TrivialCPU')
+nlp = spacy.load('/content/drive/MyDrive/PIIAnonymizer/models/GPU_bert_cased/model-best')
 
 import logging
 from typing import Optional, List, Tuple, Set
@@ -221,7 +220,7 @@ from presidio_analyzer.nlp_engine import NlpEngineProvider
 # Create configuration containing engine name and models
 configuration = {
     "nlp_engine_name": "spacy",
-    "models": [{"lang_code": "cs", "model_name": "cs_TrivialCPUFineGrained"}],
+    "models": [{"lang_code": "cs", "model_name": "cs_GPU_bert_cased"}],
 }
 
 # Create new recognizer registry and add the custom recognizer

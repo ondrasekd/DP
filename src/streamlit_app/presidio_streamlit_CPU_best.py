@@ -1,4 +1,3 @@
-"""Streamlit app for Presidio."""
 import json
 from json import JSONEncoder
 import pandas as pd
@@ -7,7 +6,9 @@ from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
 import spacy
 
-nlp = spacy.load('/content/drive/MyDrive/DP/models/TrivialCPU')
+# TODO pohrat si s dalsim stremlit komponentami
+
+nlp = spacy.load('/content/drive/MyDrive/PIIAnonymizer/models/CPU_fine_lemmas/model-best')
 
 import logging
 from typing import Optional, List, Tuple, Set
@@ -24,9 +25,7 @@ logger = logging.getLogger("presidio-analyzer")
 class SpacyRecognizerCustom(LocalRecognizer):
     """
     Recognize PII entities using a spaCy NLP model.
-    Since the spaCy pipeline is ran by the AnalyzerEngine,
-    this recognizer only extracts the entities from the NlpArtifacts
-    and replaces their types to align with Presidio's.
+    This recognizer extract entities from NlpArtifacts and align their types with Presidio.
     :param supported_language: Language this recognizer supports
     :param supported_entities: The entities this recognizer can detect
     :param ner_strength: Default confidence for NER prediction
@@ -36,34 +35,35 @@ class SpacyRecognizerCustom(LocalRecognizer):
     """
 
     ENTITIES = [
-        "DATE_TIME",
-        #"NRP",
-        "LOCATION",
-        "ADDRES_PHONE",
         "PERSON",
-        "INSTITUTION",
+        "EMAIL_ADDRESS",
+        "LOGIN_NICK",
+        "iNSTITUTION",
+        "PHONE_NUM",
         "MEDIA_NAME",
+        "DOMAIN",
         "NUMBER_EXPR",
-        "ARTIFACT_NAME"
+        "LOCATION",
+        "PRODUCT",
+        "DATE_TIME",
+        "OTHER"
     ]
 
     DEFAULT_EXPLANATION = "Identified as {} by Spacy's Named Entity Recognition"
 
-  # NOTE: number expressionc moc nedavaji v nasem kontextu smysl
-  #   v Artifact names je pro nas dulezity asi jen product
-  #   NRP v nasem datasetu v tuto chvili nedokazeme identifikovat
-  #   budu muset vytvorit novy model zalozeny na upravenem datasetu s fine-grained entitami a tohle potom upravit
-  #   zaroven asi jeste budu muset opravit tabulku entit v prvni kapitole
     CHECK_LABEL_GROUPS = [
-        ({"LOCATION"}, {"G"}),
-        ({"PERSON"}, {"P"}),
-        ({"DATE_TIME"}, {"T"}),
-        #({"NRP"}, {"NORP"}),
-        ({"INSTITUTION"}, {"I"}),
-        ({"ADDRES_PHONE"}, {"A"}),
-        ({"MEDIA_NAME"}, {"M"}),
-        ({"NUMBER_EXPR"}, {"N"}),
-        ({"ARTIFACT_NAME"}, {"O"})
+        ({"PERSON"}, {"pd", "pf", "pm", "ps"}),
+        ({"EMAIL_ADDRESS"}, {"me"}),
+        ({"LOGIN_NICK"}, {"p_"}),
+        ({"iNSTITUTION"}, {"ia", "ic", "if", "io", "i_"}),
+        ({"PHONE_NUM"}, {"at"}),
+        ({"MEDIA_NAME"}, {"mn", "ms"}),
+        ({"NUMBER_EXPR"}, {"nb", "nc", "ni", "no", "ns", "n_"}),
+        ({"DOMAIN"}, {"mi"}),
+        ({"LOCATION"}, {"ah", "az", "gc", "gh", "gl", "gq", "gr", "gs", "gt", "gu", "g_"}),
+        ({"PRODUCT"}, {"op"}),
+        ({"DATE_TIME"}, {"td", "tf", "th", "tm", "ty"}),
+        ({"OTHER"}, {"oa", "or", "o_", "pc"})
     ]
 
     def __init__(
@@ -94,12 +94,6 @@ class SpacyRecognizerCustom(LocalRecognizer):
     def build_spacy_explanation(
         self, original_score: float, explanation: str
     ) -> AnalysisExplanation:
-        """
-        Create explanation for why this result was detected.
-        :param original_score: Score given by this recognizer
-        :param explanation: Explanation string
-        :return:
-        """
         explanation = AnalysisExplanation(
             recognizer=self.__class__.__name__,
             original_score=original_score,
@@ -110,7 +104,7 @@ class SpacyRecognizerCustom(LocalRecognizer):
     def analyze(self, text, entities, nlp_artifacts=None):  # noqa D102
         results = []
         if not nlp_artifacts:
-            logger.warning("Skipping SpaCy, nlp artifacts not provided...")
+            logger.warning("Nlp artifacts not provided...")
             return results
 
         ner_entities = nlp_artifacts.entities
@@ -147,13 +141,7 @@ class SpacyRecognizerCustom(LocalRecognizer):
             [entity in egrp and label in lgrp for egrp, lgrp in check_label_groups]
         )
 
-# Create custom recognizer based on NER model NEs
 spacy_recognizer_custom = SpacyRecognizerCustom()
-
-# "rodne cislo" custom recognizer (derived from https://gist.github.com/xnekv03/7d684df577a483d8b7734dafb8291e3d#file-verifyrc-php podle https://phpfashion.com/jak-overit-platne-ic-a-rodne-cislo)
-# TODO
-  # fix multiple overlaping results
-  # add additional validation checks
 
 from collections import defaultdict
 from typing import List, Optional
@@ -215,7 +203,7 @@ from presidio_analyzer.nlp_engine import NlpEngineProvider
 # Create configuration containing engine name and models
 configuration = {
     "nlp_engine_name": "spacy",
-    "models": [{"lang_code": "cs", "model_name": "cs_TrivialCPU"}],
+    "models": [{"lang_code": "cs", "model_name": "cs_TrivialCPUFineGrained"}],
 }
 
 # Create new recognizer registry and add the custom recognizer
@@ -266,7 +254,7 @@ def anonymize(text, analyze_results):
 
     res = anonymizer_engine().anonymize(text, analyze_results)
     return res.text
-st.set_page_config(page_title="Presidio demo", layout="wide")
+st.set_page_config(page_title="Nástroj pro anonymizaci osobních údajů", layout="wide")
 # Side bar
 st_entities = st.sidebar.multiselect(
     label="Výběr jmenných identifikátorů",
@@ -274,7 +262,7 @@ st_entities = st.sidebar.multiselect(
     default=list(get_supported_entities()),
 )
 st_threhsold = st.sidebar.slider(
-    label="Acceptance threshold", min_value=0.0, max_value=1.0, value=0.35
+    label="Práh klasifikace", min_value=0.0, max_value=1.0, value=0.35
 )
 st_return_decision_process = st.sidebar.checkbox("Add analysis explanations in json")
 
@@ -285,15 +273,15 @@ analyzer_load_state.empty()
 # Create two columns for before and after
 col1, col2 = st.columns(2)
 # Before:
-col1.subheader("Input string:")
+col1.subheader("Vstupní text:")
 st_text = col1.text_area(
-    label="Enter text",
+    label="Vložte textový řetězec",
     value="Kontaktní telefonní číslo "
     "společnosti StavMat s.r.o. je +420 500 210 596. Zodpovědnou osobou je Jan Lakatoš.",
     height=400,
 )
 # After
-col2.subheader("Output:")
+col2.subheader("Výstup:")
 st_analyze_results = analyze(
     text=st_text,
     entities=st_entities,
@@ -304,23 +292,24 @@ st_analyze_results = analyze(
 st_anonymize_results = anonymize(st_text, st_analyze_results)
 col2.text_area(label="", value=st_anonymize_results, height=400)
 # table result
-st.subheader("Findings")
+st.subheader("Nalezené entity")
 if st_analyze_results:
     df = pd.DataFrame.from_records([r.to_dict() for r in st_analyze_results])
     df = df[["entity_type", "start", "end", "score"]].rename(
         {
-            "entity_type": "Entity type",
-            "start": "Start",
-            "end": "End",
-            "score": "Confidence",
+            "entity_type": "Kategorie",
+            "start": "Začátek",
+            "end": "Konec",
+            "score": "Skóre",
         },
         axis=1,
     )
 
     st.dataframe(df, width=1000)
 else:
-    st.text("No findings")
+    st.text("Nenalezena žádná entita")
 # json result
+# TODO odstranit JSON encoder?
 class ToDictEncoder(JSONEncoder):
     """Encode dict to json."""
 
