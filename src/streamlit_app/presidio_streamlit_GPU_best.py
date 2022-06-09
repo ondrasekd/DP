@@ -38,7 +38,7 @@ class SpacyRecognizerCustom(LocalRecognizer):
         "PERSON",
         "EMAIL_ADDRESS",
         "LOGIN_NICK",
-        "iNSTITUTION",
+        "INSTITUTION",
         "PHONE_NUM",
         "MEDIA_NAME",
         "DOMAIN",
