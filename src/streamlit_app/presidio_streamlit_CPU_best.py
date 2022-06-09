@@ -8,7 +8,7 @@ import spacy
 
 # TODO pohrat si s dalsim stremlit komponentami
 
-nlp = spacy.load('/content/drive/MyDrive/PIIAnonymizer/models/CPU_nomorph/model-best')
+nlp = spacy.load('/content/drive/MyDrive/PIIAnonymizer/models/CPU_fine_nomorph/model-best')
 
 import logging
 from typing import Optional, List, Tuple, Set
