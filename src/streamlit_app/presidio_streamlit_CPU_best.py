@@ -1,5 +1,3 @@
-import json
-from json import JSONEncoder
 import pandas as pd
 import streamlit as st
 
@@ -258,7 +256,6 @@ st_entities = st.sidebar.multiselect(
 st_threhsold = st.sidebar.slider(
     label="Práh klasifikace", min_value=0.0, max_value=1.0, value=0.35
 )
-st_return_decision_process = st.sidebar.checkbox("Add analysis explanations in json")
 
 # Main panel
 analyzer_load_state = st.info("Starting Presidio analyzer...")
@@ -281,7 +278,7 @@ st_analyze_results = analyze(
     entities=st_entities,
     language="cs",
     score_threshold=st_threhsold,
-    return_decision_process=st_return_decision_process,
+    return_decision_process=False,
 )
 st_anonymize_results = anonymize(st_text, st_analyze_results)
 col2.text_area(label="", value=st_anonymize_results, height=400)
@@ -289,12 +286,11 @@ col2.text_area(label="", value=st_anonymize_results, height=400)
 st.subheader("Nalezené entity")
 if st_analyze_results:
     df = pd.DataFrame.from_records([r.to_dict() for r in st_analyze_results])
-    df = df[["entity_type", "start", "end", "score"]].rename(
+    df = df[["entity_type", "start", "end"]].rename(
         {
             "entity_type": "Kategorie",
             "start": "Začátek",
-            "end": "Konec",
-            "score": "Skóre",
+            "end": "Konec"
         },
         axis=1,
     )
@@ -302,12 +298,3 @@ if st_analyze_results:
     st.dataframe(df, width=1000)
 else:
     st.text("Nenalezena žádná entita")
-# json result
-# TODO odstranit JSON encoder?
-class ToDictEncoder(JSONEncoder):
-    """Encode dict to json."""
-
-    def default(self, o):
-        """Encode to JSON using to_dict."""
-        return o.to_dict()
-st.json(json.dumps(st_analyze_results, cls=ToDictEncoder))
