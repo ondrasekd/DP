@@ -226,15 +226,12 @@ analyzer = AnalyzerEngine(
 
 # Helper methods
 def analyzer_engine():
-    """Return AnalyzerEngine."""
     return analyzer
     #return AnalyzerEngine()
 @st.cache(allow_output_mutation=True)
 def anonymizer_engine():
-    """Return AnonymizerEngine."""
     return AnonymizerEngine()
 def get_supported_entities():
-    """Return supported entities from the Analyzer Engine."""
     return analyzer_engine().get_supported_entities()
 def analyze(**kwargs):
     """Analyze input using Analyzer engine and input arguments (kwargs)."""
@@ -242,7 +239,7 @@ def analyze(**kwargs):
         kwargs["entities"] = None
     return analyzer_engine().analyze(**kwargs)
 def anonymize(text, analyze_results):
-    """Anonymize identified input using Presidio Abonymizer."""
+    """Anonymize identified input using Presidio Anonymizer."""
 
     res = anonymizer_engine().anonymize(text, analyze_results)
     return res.text

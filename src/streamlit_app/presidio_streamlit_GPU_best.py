@@ -1,5 +1,3 @@
-import json
-from json import JSONEncoder
 import pandas as pd
 import streamlit as st
 
@@ -92,12 +90,6 @@ class SpacyRecognizerCustom(LocalRecognizer):
     def build_spacy_explanation(
         self, original_score: float, explanation: str
     ) -> AnalysisExplanation:
-        """
-        Create explanation for why this result was detected.
-        :param original_score: Score given by this recognizer
-        :param explanation: Explanation string
-        :return:
-        """
         explanation = AnalysisExplanation(
             recognizer=self.__class__.__name__,
             original_score=original_score,
@@ -108,7 +100,7 @@ class SpacyRecognizerCustom(LocalRecognizer):
     def analyze(self, text, entities, nlp_artifacts=None):
         results = []
         if not nlp_artifacts:
-            logger.warning("Skipping SpaCy, nlp artifacts not provided...")
+            logger.warning("Nlp artifacts not provided...")
             return results
 
         ner_entities = nlp_artifacts.entities
@@ -236,15 +228,12 @@ analyzer = AnalyzerEngine(
 
 # Helper methods
 def analyzer_engine():
-    """Return AnalyzerEngine."""
     return analyzer
     #return AnalyzerEngine()
 @st.cache(allow_output_mutation=True)
 def anonymizer_engine():
-    """Return AnonymizerEngine."""
     return AnonymizerEngine()
 def get_supported_entities():
-    """Return supported entities from the Analyzer Engine."""
     return analyzer_engine().get_supported_entities()
 def analyze(**kwargs):
     """Analyze input using Analyzer engine and input arguments (kwargs)."""
@@ -252,21 +241,17 @@ def analyze(**kwargs):
         kwargs["entities"] = None
     return analyzer_engine().analyze(**kwargs)
 def anonymize(text, analyze_results):
-    """Anonymize identified input using Presidio Abonymizer."""
+    """Anonymize identified input using Presidio Anonymizer."""
 
     res = anonymizer_engine().anonymize(text, analyze_results)
     return res.text
-st.set_page_config(page_title="Presidio demo", layout="wide")
+st.set_page_config(page_title="Nástroj pro anonymizaci osobních údajů", layout="wide")
 # Side bar
 st_entities = st.sidebar.multiselect(
     label="Výběr jmenných identifikátorů",
     options=get_supported_entities(),
     default=list(get_supported_entities()),
 )
-st_threhsold = st.sidebar.slider(
-    label="Acceptance threshold", min_value=0.0, max_value=1.0, value=0.35
-)
-st_return_decision_process = st.sidebar.checkbox("Add analysis explanations in json")
 
 # Main panel
 analyzer_load_state = st.info("Starting Presidio analyzer...")
@@ -275,46 +260,37 @@ analyzer_load_state.empty()
 # Create two columns for before and after
 col1, col2 = st.columns(2)
 # Before:
-col1.subheader("Input string:")
+col1.subheader("Vstupní text:")
 st_text = col1.text_area(
-    label="Enter text",
+    label="Vložte textový řetězec",
     value="Kontaktní telefonní číslo "
     "společnosti StavMat s.r.o. je +420 500 210 596. Zodpovědnou osobou je Jan Lakatoš.",
     height=400,
 )
 # After
-col2.subheader("Output:")
+col2.subheader("Výstup:")
 st_analyze_results = analyze(
     text=st_text,
     entities=st_entities,
     language="cs",
-    score_threshold=st_threhsold,
-    return_decision_process=st_return_decision_process,
+    score_threshold=0.35,
+    return_decision_process=False,
 )
 st_anonymize_results = anonymize(st_text, st_analyze_results)
 col2.text_area(label="", value=st_anonymize_results, height=400)
 # table result
-st.subheader("Findings")
+st.subheader("Nalezené entity")
 if st_analyze_results:
     df = pd.DataFrame.from_records([r.to_dict() for r in st_analyze_results])
-    df = df[["entity_type", "start", "end", "score"]].rename(
+    df = df[["entity_type", "start", "end"]].rename(
         {
-            "entity_type": "Entity type",
-            "start": "Start",
-            "end": "End",
-            "score": "Confidence",
+            "entity_type": "Kategorie",
+            "start": "Začátek",
+            "end": "Konec"
         },
         axis=1,
     )
 
     st.dataframe(df, width=1000)
 else:
-    st.text("No findings")
-# json result
-class ToDictEncoder(JSONEncoder):
-    """Encode dict to json."""
-
-    def default(self, o):
-        """Encode to JSON using to_dict."""
-        return o.to_dict()
-st.json(json.dumps(st_analyze_results, cls=ToDictEncoder))
+    st.text("Nenalezena žádná entita")
