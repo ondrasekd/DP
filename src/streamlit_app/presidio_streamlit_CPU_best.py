@@ -222,7 +222,7 @@ nlp_engine_custom = provider.create_engine()
 # Pass the created NLP engine and supported_languages to the AnalyzerEngine
 analyzer = AnalyzerEngine(
     nlp_engine=nlp_engine_custom, 
-    supported_languages=["cs", "en"],
+    supported_languages=["cs"],
     registry=recognizer_registry
 )
 
