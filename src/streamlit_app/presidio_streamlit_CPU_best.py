@@ -1,6 +1,8 @@
 import json
 from json import JSONEncoder
 import pandas as pd
+import streamlit as st
+
 from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
 import spacy
