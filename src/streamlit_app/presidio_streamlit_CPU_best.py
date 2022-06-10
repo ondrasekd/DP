@@ -253,9 +253,6 @@ st_entities = st.sidebar.multiselect(
     options=get_supported_entities(),
     default=list(get_supported_entities()),
 )
-st_threhsold = st.sidebar.slider(
-    label="Práh klasifikace", min_value=0.0, max_value=1.0, value=0.35
-)
 
 # Main panel
 analyzer_load_state = st.info("Starting Presidio analyzer...")
@@ -277,7 +274,7 @@ st_analyze_results = analyze(
     text=st_text,
     entities=st_entities,
     language="cs",
-    score_threshold=st_threhsold,
+    score_threshold=0.35,
     return_decision_process=False,
 )
 st_anonymize_results = anonymize(st_text, st_analyze_results)
