@@ -1,7 +1,6 @@
 import json
 from json import JSONEncoder
 import pandas as pd
-import streamlit as st
 from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
 import spacy
@@ -19,7 +18,7 @@ from presidio_analyzer import (
 
 logger = logging.getLogger("presidio-analyzer")
 
-
+# this custom spacy recognizer is based on https://github.com/microsoft/presidio/blob/main/presidio-analyzer/presidio_analyzer/predefined_recognizers/spacy_recognizer.py
 class SpacyRecognizerCustom(LocalRecognizer):
     """
     Recognize PII entities using a spaCy NLP model.
@@ -51,11 +50,6 @@ class SpacyRecognizerCustom(LocalRecognizer):
 
     DEFAULT_EXPLANATION = "Identified as {} by Spacy's Named Entity Recognition"
 
-  # NOTE: number expressionc moc nedavaji v nasem kontextu smysl
-  #   v Artifact names je pro nas dulezity asi jen product
-  #   NRP v nasem datasetu v tuto chvili nedokazeme identifikovat
-  #   budu muset vytvorit novy model zalozeny na upravenem datasetu s fine-grained entitami a tohle potom upravit
-  #   zaroven asi jeste budu muset opravit tabulku entit v prvni kapitole
     CHECK_LABEL_GROUPS = [
         ({"PERSON"}, {"pd", "pf", "pm", "ps"}),
         ({"EMAIL_ADDRESS"}, {"me"}),
@@ -75,7 +69,6 @@ class SpacyRecognizerCustom(LocalRecognizer):
         self,
         supported_language: str = "cs",
         supported_entities: Optional[List[str]] = None,
-        # TODO doplnit dle aktualni sily modelu
         ner_strength: float = 0.82,
         check_label_groups: Optional[Tuple[Set, Set]] = None,
         context: Optional[List[str]] = None,
@@ -91,9 +84,7 @@ class SpacyRecognizerCustom(LocalRecognizer):
             context=context,
         )
 
-    def load(self) -> None:  # noqa D102
-        # no need to load anything as the analyze method already receives
-        # preprocessed nlp artifacts
+    def load(self) -> None:
         pass
 
     def build_spacy_explanation(
@@ -112,7 +103,7 @@ class SpacyRecognizerCustom(LocalRecognizer):
         )
         return explanation
 
-    def analyze(self, text, entities, nlp_artifacts=None):  # noqa D102
+    def analyze(self, text, entities, nlp_artifacts=None):
         results = []
         if not nlp_artifacts:
             logger.warning("Skipping SpaCy, nlp artifacts not provided...")
@@ -154,11 +145,6 @@ class SpacyRecognizerCustom(LocalRecognizer):
 
 # Create custom recognizer based on NER model NEs
 spacy_recognizer_custom = SpacyRecognizerCustom()
-
-# "rodne cislo" custom recognizer (derived from https://gist.github.com/xnekv03/7d684df577a483d8b7734dafb8291e3d#file-verifyrc-php podle https://phpfashion.com/jak-overit-platne-ic-a-rodne-cislo)
-# TODO
-  # fix multiple overlaping results
-  # add additional validation checks
 
 from collections import defaultdict
 from typing import List, Optional
@@ -210,8 +196,6 @@ crypto_recognizer = CryptoRecognizer(supported_language="cs", context=["wallet",
 email_recognizer = EmailRecognizer(supported_language="cs", context=["email", "mail", "e-mail"])
 iban_recognizer = IbanRecognizer(supported_language="cs", context=["iban", "banka", "swift", "zahranicni", "transakce", "platba"])
 ip_recognizer = IpRecognizer(supported_language="cs")
-# phone recognizer musi byt upraven pro CZ pouziti
-#phone_recognizer = PhoneRecognizer()
 
 from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
 from presidio_analyzer.nlp_engine import NlpEngineProvider
@@ -236,7 +220,6 @@ recognizer_registry.add_recognizer(crypto_recognizer)
 recognizer_registry.add_recognizer(email_recognizer)
 recognizer_registry.add_recognizer(iban_recognizer)
 recognizer_registry.add_recognizer(ip_recognizer)
-#recognizer_registry.add_recognizer(phone_recognizer)
 
 # Create NLP engine based on configuration
 provider = NlpEngineProvider(nlp_configuration=configuration)
