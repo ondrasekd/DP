@@ -39,7 +39,6 @@ class SpacyRecognizerCustom(LocalRecognizer):
         "INSTITUTION",
         "PHONE_NUM",
         "MEDIA_NAME",
-        "DOMAIN",
         "NUMBER_EXPR",
         "LOCATION",
         "PRODUCT",
@@ -57,7 +56,6 @@ class SpacyRecognizerCustom(LocalRecognizer):
         ({"PHONE_NUM"}, {"at"}),
         ({"MEDIA_NAME"}, {"mn", "ms"}),
         ({"NUMBER_EXPR"}, {"nb", "nc", "ni", "no", "ns", "n_"}),
-        ({"DOMAIN"}, {"mi"}),
         ({"LOCATION"}, {"ah", "az", "gc", "gh", "gl", "gq", "gr", "gs", "gt", "gu", "g_"}),
         ({"PRODUCT"}, {"op"}),
         ({"DATE_TIME"}, {"td", "tf", "th", "tm", "ty"}),
@@ -99,7 +97,6 @@ class SpacyRecognizerCustom(LocalRecognizer):
     def analyze(self, text, entities, nlp_artifacts=None):
         results = []
         if not nlp_artifacts:
-            logger.warning("Nlp artifacts not provided...")
             return results
 
         ner_entities = nlp_artifacts.entities
@@ -181,13 +178,14 @@ class CSRCRecognizer(PatternRecognizer):
 
 rc_recognizer = CSRCRecognizer()
 
-from presidio_analyzer.predefined_recognizers import CreditCardRecognizer, CryptoRecognizer, EmailRecognizer, IbanRecognizer, IpRecognizer, PhoneRecognizer
+from presidio_analyzer.predefined_recognizers import CreditCardRecognizer, CryptoRecognizer, EmailRecognizer, IbanRecognizer, IpRecognizer, PhoneRecognizer, UrlRecognizer
 
 credit_card_recognizer = CreditCardRecognizer(supported_language="cs", context=["kreditni", "debetni", "karta", "visa", "mastercard", "maestro", "platba"])
 crypto_recognizer = CryptoRecognizer(supported_language="cs", context=["wallet", "btc", "bitcoin", "ethereum", "eth", "crypto", "kryptomena"])
 email_recognizer = EmailRecognizer(supported_language="cs", context=["email", "mail", "e-mail"])
 iban_recognizer = IbanRecognizer(supported_language="cs", context=["iban", "banka", "swift", "zahranicni", "transakce", "platba"])
 ip_recognizer = IpRecognizer(supported_language="cs")
+url_recognizer = UrlRecognizer(supported_language="cs", supported_entity="DOMAIN")
 
 from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
 from presidio_analyzer.nlp_engine import NlpEngineProvider
