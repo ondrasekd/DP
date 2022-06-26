@@ -1,2 +1,2 @@
 # DP
-This repository contains the source codes to a diploma thesis "PII detection in unstructured texts"
+This repository contains the source codes and text to a diploma thesis "PII detection in unstructured texts".
